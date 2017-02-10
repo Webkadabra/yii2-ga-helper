@@ -26,7 +26,6 @@ class Component extends \yii\base\Component
      * @param $model Order
      */
     public function refundOrder($model) {
-        $client = new Client(['base_uri' => 'http://www.google-analytics.com']);
         $data  = [
             'v' => 1,
             't' => 'event',
