@@ -5,19 +5,24 @@
  */
 namespace yii\helper\analytics;
 
-use GuzzleHttp\Client;
+use yii\httpclient\Client;
+use yii\web\BadRequestHttpException;
 
 class Component extends \yii\base\Component
 {
     public $trackerId;
 	public $defaultCustomerId = '100000001';
 	public $currency = 'USD';
+	
+	const API_COLLECT_URL = 'http://www.google-analytics.com/collect';
+	
     /**
      * Cancel Google Analytics transaction
      * @link https://ga-dev-tools.appspot.com/hit-builder/
      * @link https://developers.google.com/analytics/devguides/collection/protocol/v1/devguide#commonhits
      * @link https://support.google.com/analytics/answer/1037443?hl=en
      *
+	 * @throws BadRequestHttpException
      * @param $model Order
      */
     public function refundOrder($model) {
@@ -44,10 +49,15 @@ class Component extends \yii\base\Component
             $data['pr'.$i.'pr'] = $item->price;
             $i++;
         }
-        $response = $client->request('POST', 'http://www.google-analytics.com/collect', [
-            'query' => $data,
-            'form_params' => $data,
-        ]);
-        return $response;
+        $client = new Client();
+        $response = $client->createRequest()
+            ->setMethod('post')
+            ->setUrl(self::API_COLLECT_URL)
+            ->setData($data)
+            ->send();
+        if ($response->isOk) {
+            return $response;
+        }
+        else throw new BadRequestHttpException();
     }
 }
